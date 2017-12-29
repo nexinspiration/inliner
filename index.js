@@ -13,20 +13,15 @@ htmlFiles.forEach((file) => {
     if (err) {
       console.log(`can't read file: ${file}`)
     } else {
-      // gets all matches in a file
+
       fs.readFile(fileToRead, { encoding: 'utf-8' }, (err, data) => {
         if (err) {
           console.log(`can't read file: ${file}`)
         } else {
-          let matches = [];
-          const regex = /{{inline [\', \"][^}]+[\', \"]}}/g
-          let match;
-          do {
-            match = regex.exec(data);
-            if (Array.isArray(match)) {
-              matches = [...matches, match[0]];
-            }
-          } while (match);
+          const regex = /{{inline [\', \"][^}]+[\', \"]}}/g;
+
+          let matches = regexMatchesInFile(data, regex);
+
           matches.forEach((match) => {
             let fileNameToInline = match.match(/[\', \"]([^}]+)[\', \"]/g);
             fileNameToInline = fileNameToInline[0].replace(/[", ']/g, '');
@@ -43,12 +38,27 @@ htmlFiles.forEach((file) => {
   });
 });
 
-function getInlinesFileData(fileNameToInline) {
-  console.log(fileNameToInline);
-  let data = fs.readFileSync(fileNameToInline, 'utf-8');
+// gets all matches in a file for a regex
+function regexMatchesInFile(data, regex) {
+  let matches = [], match;
+  do {
+    match = regex.exec(data);
+    if (Array.isArray(match)) {
+      matches = [...matches, match[0]];
+    }
+  } while (match);
 
-  console.log(data);
-  return data;
+  return matches;
+}
+
+function getInlinesFileData(fileNameToInline) {
+  try {
+    let data = fs.readFileSync(fileNameToInline, 'utf-8');
+    return data;
+  } catch(error) {
+    return 'File Not Found';
+    console.log(error);
+  }
 }
 
 function writeIntoFile(file, data) {
