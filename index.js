@@ -1,38 +1,42 @@
 const fs = require('fs');
 
-let filesInDir = recursiveGetAllFiles('.');
+module.exports = Inliner;
 
-filesInDir = filesInDir.filter((file) => {
-  return fs.statSync(file).isFile();
-});
+function Inliner() {
+  let filesInDir = recursiveGetAllFiles('.');
 
-filesInDir.forEach((file) => {
-  fs.open(file, 'r+', (err, fileToRead) => {
-    if (err) {
-      console.log(`can't read file: ${file}`)
-    } else {
-      fs.readFile(fileToRead, { encoding: 'utf-8' }, (err, data) => {
-        if (err) {
-          console.log(`can't read file: ${file}`)
-        } else {
-          const regex = /{{inline [\', \"][^}]+[\', \"]}}/g;
-
-          let matches = regexMatchesInFile(data, regex);
-
-          matches.forEach((match) => {
-            let fileNameToInline = match.match(/[\', \"]([^}]+)[\', \"]/g);
-            fileNameToInline = fileNameToInline[0].replace(/[", ']/g, '');
-            let fileData = getInlinesFileData(fileNameToInline);
-            data = data.replace(match, fileData);
-          });
-
-          writeIntoFile(fileToRead, data, file);
-        }
-
-      });
-    }
+  filesInDir = filesInDir.filter((file) => {
+    return fs.statSync(file).isFile();
   });
-});
+
+  filesInDir.forEach((file) => {
+    fs.open(file, 'r+', (err, fileToRead) => {
+      if (err) {
+        console.log(`can't read file: ${file}`)
+      } else {
+        fs.readFile(fileToRead, { encoding: 'utf-8' }, (err, data) => {
+          if (err) {
+            console.log(`can't read file: ${file}`)
+          } else {
+            const regex = /{{inline [\', \"][^}]+[\', \"]}}/g;
+
+            let matches = regexMatchesInFile(data, regex);
+
+            matches.forEach((match) => {
+              let fileNameToInline = match.match(/[\', \"]([^}]+)[\', \"]/g);
+              fileNameToInline = fileNameToInline[0].replace(/[", ']/g, '');
+              let fileData = getInlinesFileData(fileNameToInline);
+              data = data.replace(match, fileData);
+            });
+
+            writeIntoFile(fileToRead, data, file);
+          }
+
+        });
+      }
+    });
+  });
+}
 
 function recursiveGetAllFiles(rootDir) {
   let files = [];

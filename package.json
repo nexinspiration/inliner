@@ -1,6 +1,6 @@
 {
   "name": "inliner-buddy",
-  "version": "0.0.1",
+  "version": "0.0.1-beta",
   "description": "Helps you to promote DRY by providing support for inlining repetitive content when needed",
   "main": "index.js",
   "scripts": {
