@@ -1,19 +1,16 @@
 const fs = require('fs');
 
-let filesInDir = fs.readdirSync('./');
+let filesInDir = recursiveGetAllFiles('.');
 
-// Filter HTML Files
-let htmlFiles = filesInDir.filter((file) => {
-  // fs.statSync(file).isFile()
-  return file.match(/[\w,\d]+\.html/g) ;
+filesInDir = filesInDir.filter((file) => {
+  return fs.statSync(file).isFile();
 });
 
-htmlFiles.forEach((file) => {
+filesInDir.forEach((file) => {
   fs.open(file, 'r+', (err, fileToRead) => {
     if (err) {
       console.log(`can't read file: ${file}`)
     } else {
-
       fs.readFile(fileToRead, { encoding: 'utf-8' }, (err, data) => {
         if (err) {
           console.log(`can't read file: ${file}`)
@@ -29,14 +26,37 @@ htmlFiles.forEach((file) => {
             data = data.replace(match, fileData);
           });
 
-
-          writeIntoFile(fileToRead, data);
+          writeIntoFile(fileToRead, data, file);
         }
 
       });
     }
   });
 });
+
+function recursiveGetAllFiles(rootDir) {
+  let files = [];
+  files = getAllFilesInDirectory(rootDir, rootDir, rootDir);
+  return files;
+}
+
+function getAllFilesInDirectory(dir, rootDir, appendDir) {
+  let all = fs.readdirSync(dir) || [];
+
+  all.forEach((entity) => {
+    if (!entity.startsWith('.') && fs.statSync(`${dir}/${entity}`).isDirectory()) {
+      all.push(...getAllFilesInDirectory(`${dir}/${entity}`, rootDir, entity));
+    }
+  });
+
+  if (appendDir !== rootDir) {
+    all = all.map(entity => {
+      return `${appendDir}/${entity}`;
+    });
+  }
+
+  return all;
+}
 
 // gets all matches in a file for a regex
 function regexMatchesInFile(data, regex) {
@@ -61,11 +81,11 @@ function getInlinesFileData(fileNameToInline) {
   }
 }
 
-function writeIntoFile(file, data) {
+function writeIntoFile(file, data, fileName) {
   fs.writeFile(file, data, { encoding: 'utf-8' }, (err, data) => {
     if (err) {
-      console.log(`can't write to file: ${file}`)
+      console.log(`can't write to file: ${fileName}`)
     }
-    console.log(`The file ${file} has been saved!`);
+    console.log(`The file ${fileName} has been inlined!`);
   });
 }
